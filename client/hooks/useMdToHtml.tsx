@@ -1,7 +1,7 @@
 import { Marked } from "npm:marked";
 import { markedHighlight } from "npm:marked-highlight";
 import hljs from "npm:highlight.js";
-import { useEffect, useState } from "npm:hono/jsx/dom";
+import { useEffect, useState } from "jsr:@hono/hono/jsx/dom";
 
 const marked = new Marked(
   markedHighlight({

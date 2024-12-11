@@ -19,12 +19,11 @@ html {
 }
 
 .answer code {
-  /*overflow-x: scroll;*/
   font-family: Iosevka Web, Consolas, Courier, monospace;
 }
 
 .answer pre {
-  font-size: smaller;
+  overflow-x: scroll;
   border-radius: 3px;
   margin: 0.5em 0;
   color: #c9d1d9;

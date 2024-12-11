@@ -8,9 +8,9 @@ await esbuild.build({
   outfile: "static/script.js",
   format: "esm",
   tsconfigRaw: `{
-      "compilerOptions": {
-        "jsx": "react-jsx",
-        "jsxImportSource": "npm:hono/jsx/dom"
-      }
-    }`,
+    "compilerOptions": {
+      "jsx": "react-jsx",
+      "jsxImportSource": "jsr:@hono/hono/jsx/dom"
+    }
+  }`,
 });

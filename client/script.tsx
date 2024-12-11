@@ -1,23 +1,40 @@
-import { render, useCallback, useState } from "npm:hono/jsx/dom";
+import { render, useCallback, useState } from "jsr:@hono/hono/jsx/dom";
+
 import { useMdToHtml } from "./hooks/useMdToHtml.tsx";
 import { Html } from "./components/Html.tsx";
 
 function Chat() {
   const [question, setQuestion] = useState("");
   const [answer, setAnswer] = useState("");
+  const [isInprogress, setInProgress] = useState(false);
+  const [ac, setAc] = useState<AbortController | null>(null);
   const html = useMdToHtml(answer);
 
   const sendQuestion = useCallback(async () => {
+    setInProgress(true);
     setAnswer("");
-    const res = await fetch(`/chat?q=${encodeURIComponent(question)}`, {
-      method: "POST",
-    });
 
-    const decoder = new TextDecoder();
-    for await (const chunk of res.body!) {
-      setAnswer(
-        (current) => (current += decoder.decode(chunk, { stream: true }))
-      );
+    const url = `/chat?q=${encodeURIComponent(question)}`;
+    setQuestion("");
+    const ac = new AbortController();
+    setAc(ac);
+
+    try {
+      const res = await fetch(url, {
+        method: "POST",
+        signal: ac.signal,
+      });
+
+      const decoder = new TextDecoder();
+      for await (const chunk of res.body!) {
+        setAnswer(
+          (current) => (current += decoder.decode(chunk, { stream: true }))
+        );
+      }
+    } catch (err) {
+      if ((err as Error).name !== "AbortError") throw err;
+    } finally {
+      setInProgress(false);
     }
   }, [question]);
 
@@ -27,11 +44,17 @@ function Chat() {
         <Html content={html} />
       </div>
       <form
-        onSubmit={(e) => {
-          e.preventDefault();
-          sendQuestion();
-          setQuestion("");
-        }}
+        onSubmit={
+          isInprogress
+            ? (e) => {
+                e.preventDefault();
+                ac!.abort();
+              }
+            : (e) => {
+                e.preventDefault();
+                sendQuestion();
+              }
+        }
         class="flex"
       >
         <input
@@ -43,9 +66,13 @@ function Chat() {
         />
         <button
           type="submit"
-          class="border border-slate-900 bg-cyan-600 text-slate-100 rounded py-2 px-6 hover:bg-cyan-700 focus:outline-none ml-1 font-bold"
+          class={`border border-slate-900  text-slate-100 rounded py-2 px-6 focus:outline-none ml-1 font-bold ${
+            isInprogress
+              ? "bg-rose-600 hover:bg-rose-700"
+              : "bg-cyan-600 hover:bg-cyan-700"
+          }`}
         >
-          Send
+          {isInprogress ? "Cancel" : "Send"}
         </button>
       </form>
     </>

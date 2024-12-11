@@ -7,6 +7,10 @@ var __hasOwnProp = Object.prototype.hasOwnProperty;
 var __commonJS = (cb, mod) => function __require() {
   return mod || (0, cb[__getOwnPropNames(cb)[0]])((mod = { exports: {} }).exports, mod), mod.exports;
 };
+var __export = (target, all) => {
+  for (var name in all)
+    __defProp(target, name, { get: all[name], enumerable: true });
+};
 var __copyProps = (to, from, except, desc) => {
   if (from && typeof from === "object" || typeof from === "function") {
     for (let key of __getOwnPropNames(from))
@@ -50853,44 +50857,23 @@ var require_lib = __commonJS({
   }
 });
 
-// ../../.cache/deno/deno_esbuild/registry.npmjs.org/hono@4.4.7/node_modules/hono/dist/jsx/constants.js
+// https://jsr.io/@hono/hono/4.6.13/src/jsx/constants.ts
 var DOM_RENDERER = Symbol("RENDERER");
 var DOM_ERROR_HANDLER = Symbol("ERROR_HANDLER");
 var DOM_STASH = Symbol("STASH");
 var DOM_INTERNAL_TAG = Symbol("INTERNAL");
+var DOM_MEMO = Symbol("MEMO");
+var PERMALINK = Symbol("PERMALINK");
 
-// ../../.cache/deno/deno_esbuild/registry.npmjs.org/hono@4.4.7/node_modules/hono/dist/jsx/dom/utils.js
+// https://jsr.io/@hono/hono/4.6.13/src/jsx/dom/utils.ts
 var setInternalTagFlag = (fn) => {
   ;
   fn[DOM_INTERNAL_TAG] = true;
   return fn;
 };
-var JSXNodeCompatPrototype = {
-  type: {
-    get() {
-      return this.tag;
-    }
-  },
-  ref: {
-    get() {
-      return this.props?.ref;
-    }
-  }
-};
-var newJSXNode = (obj) => Object.defineProperties(obj, JSXNodeCompatPrototype);
 
-// ../../.cache/deno/deno_esbuild/registry.npmjs.org/hono@4.4.7/node_modules/hono/dist/jsx/dom/jsx-dev-runtime.js
-var jsxDEV = (tag2, props, key) => {
-  return newJSXNode({
-    tag: tag2,
-    props,
-    key
-  });
-};
-var Fragment = (props) => jsxDEV("", props, void 0);
-
-// ../../.cache/deno/deno_esbuild/registry.npmjs.org/hono@4.4.7/node_modules/hono/dist/jsx/dom/context.js
-var createContextProviderFunction = (values) => setInternalTagFlag(({ value, children }) => {
+// https://jsr.io/@hono/hono/4.6.13/src/jsx/dom/context.ts
+var createContextProviderFunction = (values) => ({ value, children }) => {
   if (!children) {
     return void 0;
   }
@@ -50915,37 +50898,56 @@ var createContextProviderFunction = (values) => setInternalTagFlag(({ value, chi
     }),
     props: {}
   });
-  const res = Fragment(props);
+  const res = { tag: "", props, type: "" };
   res[DOM_ERROR_HANDLER] = (err) => {
     values.pop();
     throw err;
   };
   return res;
-});
+};
 var createContext = (defaultValue) => {
   const values = [defaultValue];
-  const context = {
-    values,
-    Provider: createContextProviderFunction(values)
-  };
+  const context = createContextProviderFunction(values);
+  context.values = values;
+  context.Provider = context;
   globalContexts.push(context);
   return context;
 };
 
-// ../../.cache/deno/deno_esbuild/registry.npmjs.org/hono@4.4.7/node_modules/hono/dist/jsx/context.js
+// https://jsr.io/@hono/hono/4.6.13/src/jsx/context.ts
 var globalContexts = [];
 var useContext = (context) => {
   return context.values.at(-1);
 };
 
-// ../../.cache/deno/deno_esbuild/registry.npmjs.org/hono@4.4.7/node_modules/hono/dist/jsx/utils.js
+// https://jsr.io/@hono/hono/4.6.13/src/jsx/intrinsic-element/common.ts
+var deDupeKeyMap = {
+  title: [],
+  script: ["src"],
+  style: ["data-href"],
+  link: ["href"],
+  meta: ["name", "httpEquiv", "charset", "itemProp"]
+};
+var domRenderers = {};
+var dataPrecedenceAttr = "data-precedence";
+
+// https://jsr.io/@hono/hono/4.6.13/src/jsx/children.ts
+var toArray = (children) => Array.isArray(children) ? children : [children];
+
+// https://jsr.io/@hono/hono/4.6.13/src/jsx/utils.ts
 var normalizeElementKeyMap = /* @__PURE__ */ new Map([
   ["className", "class"],
-  ["htmlFor", "for"]
+  ["htmlFor", "for"],
+  ["crossOrigin", "crossorigin"],
+  ["httpEquiv", "http-equiv"],
+  ["itemProp", "itemprop"],
+  ["fetchPriority", "fetchpriority"],
+  ["noModule", "nomodule"],
+  ["formAction", "formaction"]
 ]);
 var normalizeIntrinsicElementKey = (key) => normalizeElementKeyMap.get(key) || key;
-var styleObjectForEach = (style, fn) => {
-  for (const [k, v] of Object.entries(style)) {
+var styleObjectForEach = (style2, fn) => {
+  for (const [k, v] of Object.entries(style2)) {
     const key = k[0] === "-" || !/[A-Z]/.test(k) ? k : k.replace(/[A-Z]/g, (m) => `-${m.toLowerCase()}`);
     fn(
       key,
@@ -50956,10 +50958,7 @@ var styleObjectForEach = (style, fn) => {
   }
 };
 
-// ../../.cache/deno/deno_esbuild/registry.npmjs.org/hono@4.4.7/node_modules/hono/dist/jsx/children.js
-var toArray = (children) => Array.isArray(children) ? children : [children];
-
-// ../../.cache/deno/deno_esbuild/registry.npmjs.org/hono@4.4.7/node_modules/hono/dist/jsx/dom/render.js
+// https://jsr.io/@hono/hono/4.6.13/src/jsx/dom/render.ts
 var HONO_PORTAL_ELEMENT = "_hp";
 var eventAliasMap = {
   Change: "Input",
@@ -50969,56 +50968,74 @@ var nameSpaceMap = {
   svg: "2000/svg",
   math: "1998/Math/MathML"
 };
-var skipProps = /* @__PURE__ */ new Set(["children"]);
 var buildDataStack = [];
+var refCleanupMap = /* @__PURE__ */ new WeakMap();
 var nameSpaceContext = void 0;
+var getNameSpaceContext2 = () => nameSpaceContext;
 var isNodeString = (node) => "t" in node;
+var eventCache = {
+  // pre-define events that are used very frequently
+  onClick: ["click", false]
+};
 var getEventSpec = (key) => {
+  if (!key.startsWith("on")) {
+    return void 0;
+  }
+  if (eventCache[key]) {
+    return eventCache[key];
+  }
   const match = key.match(/^on([A-Z][a-zA-Z]+?(?:PointerCapture)?)(Capture)?$/);
   if (match) {
     const [, eventName, capture] = match;
-    return [(eventAliasMap[eventName] || eventName).toLowerCase(), !!capture];
+    return eventCache[key] = [(eventAliasMap[eventName] || eventName).toLowerCase(), !!capture];
   }
   return void 0;
 };
-var toAttributeName = (element, key) => element instanceof SVGElement && /[A-Z]/.test(key) && (key in element.style || key.match(/^(?:o|pai|str|u|ve)/)) ? key.replace(/([A-Z])/g, "-$1").toLowerCase() : key;
+var toAttributeName = (element, key) => nameSpaceContext && element instanceof SVGElement && /[A-Z]/.test(key) && (key in element.style || // Presentation attributes are findable in style object. "clip-path", "font-size", "stroke-width", etc.
+key.match(/^(?:o|pai|str|u|ve)/)) ? key.replace(/([A-Z])/g, "-$1").toLowerCase() : key;
 var applyProps = (container, attributes, oldAttributes) => {
   attributes ||= {};
-  for (let [key, value] of Object.entries(attributes)) {
-    if (!skipProps.has(key) && (!oldAttributes || oldAttributes[key] !== value)) {
+  for (let key in attributes) {
+    const value = attributes[key];
+    if (key !== "children" && (!oldAttributes || oldAttributes[key] !== value)) {
       key = normalizeIntrinsicElementKey(key);
       const eventSpec = getEventSpec(key);
       if (eventSpec) {
-        if (oldAttributes) {
-          container.removeEventListener(eventSpec[0], oldAttributes[key], eventSpec[1]);
-        }
-        if (value != null) {
-          if (typeof value !== "function") {
-            throw new Error(`Event handler for "${key}" is not a function`);
+        if (oldAttributes?.[key] !== value) {
+          if (oldAttributes) {
+            container.removeEventListener(eventSpec[0], oldAttributes[key], eventSpec[1]);
           }
-          container.addEventListener(eventSpec[0], value, eventSpec[1]);
+          if (value != null) {
+            if (typeof value !== "function") {
+              throw new Error(`Event handler for "${key}" is not a function`);
+            }
+            container.addEventListener(eventSpec[0], value, eventSpec[1]);
+          }
         }
       } else if (key === "dangerouslySetInnerHTML" && value) {
         container.innerHTML = value.__html;
       } else if (key === "ref") {
+        let cleanup;
         if (typeof value === "function") {
-          value(container);
+          cleanup = value(container) || (() => value(null));
         } else if (value && "current" in value) {
           value.current = container;
+          cleanup = () => value.current = null;
         }
+        refCleanupMap.set(container, cleanup);
       } else if (key === "style") {
-        const style = container.style;
+        const style2 = container.style;
         if (typeof value === "string") {
-          style.cssText = value;
+          style2.cssText = value;
         } else {
-          style.cssText = "";
+          style2.cssText = "";
           if (value != null) {
-            styleObjectForEach(value, style.setProperty.bind(style));
+            styleObjectForEach(value, style2.setProperty.bind(style2));
           }
         }
       } else {
-        const nodeName = container.nodeName;
         if (key === "value") {
+          const nodeName = container.nodeName;
           if (nodeName === "INPUT" || nodeName === "TEXTAREA" || nodeName === "SELECT") {
             ;
             container.value = value === null || value === void 0 || value === false ? null : value;
@@ -51033,7 +51050,7 @@ var applyProps = (container, attributes, oldAttributes) => {
               continue;
             }
           }
-        } else if (key === "checked" && nodeName === "INPUT" || key === "selected" && nodeName === "OPTION") {
+        } else if (key === "checked" && container.nodeName === "INPUT" || key === "selected" && container.nodeName === "OPTION") {
           ;
           container[key] = value;
         }
@@ -51051,18 +51068,15 @@ var applyProps = (container, attributes, oldAttributes) => {
     }
   }
   if (oldAttributes) {
-    for (let [key, value] of Object.entries(oldAttributes)) {
-      if (!skipProps.has(key) && !(key in attributes)) {
+    for (let key in oldAttributes) {
+      const value = oldAttributes[key];
+      if (key !== "children" && !(key in attributes)) {
         key = normalizeIntrinsicElementKey(key);
         const eventSpec = getEventSpec(key);
         if (eventSpec) {
           container.removeEventListener(eventSpec[0], value, eventSpec[1]);
         } else if (key === "ref") {
-          if (typeof value === "function") {
-            value(null);
-          } else {
-            value.current = null;
-          }
+          refCleanupMap.get(container)?.();
         } else {
           container.removeAttribute(toAttributeName(container, key));
         }
@@ -51071,27 +51085,25 @@ var applyProps = (container, attributes, oldAttributes) => {
   }
 };
 var invokeTag = (context, node) => {
-  if (node.s) {
-    const res = node.s;
-    node.s = void 0;
-    return res;
-  }
   node[DOM_STASH][0] = 0;
   buildDataStack.push([context, node]);
   const func = node.tag[DOM_RENDERER] || node.tag;
+  const props = func.defaultProps ? {
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    ...func.defaultProps,
+    ...node.props
+  } : node.props;
   try {
-    return [
-      func.call(null, {
-        ...func.defaultProps || {},
-        ...node.props
-      })
-    ];
+    return [func.call(null, props)];
   } finally {
     buildDataStack.pop();
   }
 };
 var getNextChildren = (node, container, nextChildren, childrenToRemove, callbacks) => {
-  childrenToRemove.push(...node.vR);
+  if (node.vR?.length) {
+    childrenToRemove.push(...node.vR);
+    delete node.vR;
+  }
   if (typeof node.tag === "function") {
     node[DOM_STASH][1][STASH_EFFECT]?.forEach((data) => callbacks.push(data));
   }
@@ -51101,62 +51113,57 @@ var getNextChildren = (node, container, nextChildren, childrenToRemove, callback
     } else {
       if (typeof child.tag === "function" || child.tag === "") {
         child.c = container;
+        const currentNextChildrenIndex = nextChildren.length;
         getNextChildren(child, container, nextChildren, childrenToRemove, callbacks);
+        if (child.s) {
+          for (let i = currentNextChildrenIndex; i < nextChildren.length; i++) {
+            nextChildren[i].s = true;
+          }
+          child.s = false;
+        }
       } else {
         nextChildren.push(child);
-        childrenToRemove.push(...child.vR);
+        if (child.vR?.length) {
+          childrenToRemove.push(...child.vR);
+          delete child.vR;
+        }
       }
     }
   });
 };
 var findInsertBefore = (node) => {
-  if (!node) {
-    return null;
-  } else if (node.tag === HONO_PORTAL_ELEMENT) {
-    return findInsertBefore(node.nN);
-  } else if (node.e) {
-    return node.e;
-  }
-  if (node.vC) {
-    for (let i = 0, len = node.vC.length; i < len; i++) {
-      const e = findInsertBefore(node.vC[i]);
-      if (e) {
-        return e;
-      }
+  for (; ; node = node.tag === HONO_PORTAL_ELEMENT || !node.vC || !node.pP ? node.nN : node.vC[0]) {
+    if (!node) {
+      return null;
+    }
+    if (node.tag !== HONO_PORTAL_ELEMENT && node.e) {
+      return node.e;
     }
   }
-  return findInsertBefore(node.nN);
 };
 var removeNode = (node) => {
   if (!isNodeString(node)) {
     node[DOM_STASH]?.[1][STASH_EFFECT]?.forEach((data) => data[2]?.());
-    if (node.e && node.props?.ref) {
-      if (typeof node.props.ref === "function") {
-        node.props.ref(null);
-      } else {
-        node.props.ref.current = null;
-      }
+    refCleanupMap.get(node.e)?.();
+    if (node.p === 2) {
+      node.vC?.forEach((n) => n.p = 2);
     }
     node.vC?.forEach(removeNode);
   }
-  if (node.tag !== HONO_PORTAL_ELEMENT) {
+  if (!node.p) {
     node.e?.remove();
+    delete node.e;
   }
   if (typeof node.tag === "function") {
     updateMap.delete(node);
     fallbackUpdateFnArrayMap.delete(node);
+    delete node[DOM_STASH][3];
+    node.a = true;
   }
 };
-var apply = (node, container) => {
+var apply = (node, container, isNew) => {
   node.c = container;
-  applyNodeObject(node, container);
-};
-var applyNode = (node, container) => {
-  if (isNodeString(node)) {
-    container.textContent = node.t;
-  } else {
-    applyNodeObject(node, container);
-  }
+  applyNodeObject(node, container, isNew);
 };
 var findChildNodeIndex = (childNodes, child) => {
   if (!child) {
@@ -51169,70 +51176,129 @@ var findChildNodeIndex = (childNodes, child) => {
   }
   return;
 };
-var applyNodeObject = (node, container) => {
+var cancelBuild = Symbol();
+var applyNodeObject = (node, container, isNew) => {
   const next = [];
   const remove = [];
   const callbacks = [];
   getNextChildren(node, container, next, remove, callbacks);
-  const childNodes = container.childNodes;
-  let offset = findChildNodeIndex(childNodes, findInsertBefore(node.nN)) ?? findChildNodeIndex(childNodes, next.find((n) => n.tag !== HONO_PORTAL_ELEMENT && n.e)?.e) ?? childNodes.length;
+  remove.forEach(removeNode);
+  const childNodes = isNew ? void 0 : container.childNodes;
+  let offset;
+  let insertBeforeNode = null;
+  if (isNew) {
+    offset = -1;
+  } else if (!childNodes.length) {
+    offset = 0;
+  } else {
+    const offsetByNextNode = findChildNodeIndex(childNodes, findInsertBefore(node.nN));
+    if (offsetByNextNode !== void 0) {
+      insertBeforeNode = childNodes[offsetByNextNode];
+      offset = offsetByNextNode;
+    } else {
+      offset = findChildNodeIndex(childNodes, next.find((n) => n.tag !== HONO_PORTAL_ELEMENT && n.e)?.e) ?? -1;
+    }
+    if (offset === -1) {
+      isNew = true;
+    }
+  }
   for (let i = 0, len = next.length; i < len; i++, offset++) {
     const child = next[i];
     let el;
-    if (isNodeString(child)) {
-      if (child.e && child.d) {
-        child.e.textContent = child.t;
-      }
-      child.d = false;
-      el = child.e ||= document.createTextNode(child.t);
+    if (child.s && child.e) {
+      el = child.e;
+      child.s = false;
     } else {
-      el = child.e ||= child.n ? document.createElementNS(child.n, child.tag) : document.createElement(child.tag);
-      applyProps(el, child.props, child.pP);
-      applyNode(child, el);
+      const isNewLocal = isNew || !child.e;
+      if (isNodeString(child)) {
+        if (child.e && child.d) {
+          child.e.textContent = child.t;
+        }
+        child.d = false;
+        el = child.e ||= document.createTextNode(child.t);
+      } else {
+        el = child.e ||= child.n ? document.createElementNS(child.n, child.tag) : document.createElement(child.tag);
+        applyProps(el, child.props, child.pP);
+        applyNodeObject(child, el, isNewLocal);
+      }
     }
     if (child.tag === HONO_PORTAL_ELEMENT) {
       offset--;
-    } else if (childNodes[offset] !== el && childNodes[offset - 1] !== child.e) {
-      container.insertBefore(el, childNodes[offset] || null);
+    } else if (isNew) {
+      if (!el.parentNode) {
+        container.appendChild(el);
+      }
+    } else if (childNodes[offset] !== el && childNodes[offset - 1] !== el) {
+      if (childNodes[offset + 1] === el) {
+        container.appendChild(childNodes[offset]);
+      } else {
+        container.insertBefore(el, insertBeforeNode || childNodes[offset] || null);
+      }
     }
   }
-  remove.forEach(removeNode);
-  callbacks.forEach(([, , , , cb]) => cb?.());
-  callbacks.forEach(([, cb]) => cb?.());
-  requestAnimationFrame(() => {
-    callbacks.forEach(([, , , cb]) => cb?.());
-  });
+  if (node.pP) {
+    delete node.pP;
+  }
+  if (callbacks.length) {
+    const useLayoutEffectCbs = [];
+    const useEffectCbs = [];
+    callbacks.forEach(([, useLayoutEffectCb, , useEffectCb, useInsertionEffectCb]) => {
+      if (useLayoutEffectCb) {
+        useLayoutEffectCbs.push(useLayoutEffectCb);
+      }
+      if (useEffectCb) {
+        useEffectCbs.push(useEffectCb);
+      }
+      useInsertionEffectCb?.();
+    });
+    useLayoutEffectCbs.forEach((cb) => cb());
+    if (useEffectCbs.length) {
+      requestAnimationFrame(() => {
+        useEffectCbs.forEach((cb) => cb());
+      });
+    }
+  }
 };
 var fallbackUpdateFnArrayMap = /* @__PURE__ */ new WeakMap();
-var build = (context, node, topLevelErrorHandlerNode, children) => {
-  let errorHandler;
-  children ||= typeof node.tag == "function" ? invokeTag(context, node) : toArray(node.props.children);
-  if (children[0]?.tag === "") {
-    errorHandler = children[0][DOM_ERROR_HANDLER];
-    topLevelErrorHandlerNode ||= node;
+var build = (context, node, children) => {
+  const buildWithPreviousChildren = !children && node.pC;
+  if (children) {
+    node.pC ||= node.vC;
   }
-  const oldVChildren = node.vC ? [...node.vC] : [];
-  const vChildren = [];
-  node.vR = [];
-  let prevNode;
+  let foundErrorHandler;
   try {
-    children.flat().forEach((c) => {
-      let child = buildNode(c);
+    children ||= typeof node.tag == "function" ? invokeTag(context, node) : toArray(node.props.children);
+    if (children[0]?.tag === "" && children[0][DOM_ERROR_HANDLER]) {
+      foundErrorHandler = children[0][DOM_ERROR_HANDLER];
+      context[5].push([context, foundErrorHandler, node]);
+    }
+    const oldVChildren = buildWithPreviousChildren ? [...node.pC] : node.vC ? [...node.vC] : void 0;
+    const vChildren = [];
+    let prevNode;
+    for (let i = 0; i < children.length; i++) {
+      if (Array.isArray(children[i])) {
+        children.splice(i, 1, ...children[i].flat());
+      }
+      let child = buildNode(children[i]);
       if (child) {
-        if (prevNode) {
-          prevNode.nN = child;
-        }
-        prevNode = child;
-        if (typeof child.tag === "function" && !child.tag[DOM_INTERNAL_TAG] && globalContexts.length > 0) {
-          child[DOM_STASH][2] = globalContexts.map((c2) => [c2, c2.values.at(-1)]);
+        if (typeof child.tag === "function" && // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        !child.tag[DOM_INTERNAL_TAG]) {
+          if (globalContexts.length > 0) {
+            child[DOM_STASH][2] = globalContexts.map((c) => [c, c.values.at(-1)]);
+          }
+          if (context[5]?.length) {
+            child[DOM_STASH][3] = context[5].at(-1);
+          }
         }
         let oldChild;
-        const i = oldVChildren.findIndex(
-          isNodeString(child) ? (c2) => isNodeString(c2) : child.key !== void 0 ? (c2) => c2.key === child.key : (c2) => c2.tag === child.tag
-        );
-        if (i !== -1) {
-          oldChild = oldVChildren[i];
-          oldVChildren.splice(i, 1);
+        if (oldVChildren && oldVChildren.length) {
+          const i2 = oldVChildren.findIndex(
+            isNodeString(child) ? (c) => isNodeString(c) : child.key !== void 0 ? (c) => c.key === child.key && c.tag === child.tag : (c) => c.tag === child.tag
+          );
+          if (i2 !== -1) {
+            oldChild = oldVChildren[i2];
+            oldVChildren.splice(i2, 1);
+          }
         }
         if (oldChild) {
           if (isNodeString(child)) {
@@ -51242,13 +51308,17 @@ var build = (context, node, topLevelErrorHandlerNode, children) => {
               oldChild.d = true;
             }
             child = oldChild;
-          } else if (oldChild.tag !== child.tag) {
-            node.vR.push(oldChild);
           } else {
-            oldChild.pP = oldChild.props;
+            const pP = oldChild.pP = oldChild.props;
             oldChild.props = child.props;
+            oldChild.f ||= child.f || node.f;
             if (typeof child.tag === "function") {
               oldChild[DOM_STASH][2] = child[DOM_STASH][2] || [];
+              oldChild[DOM_STASH][3] = child[DOM_STASH][3];
+              if (!oldChild.f && ((oldChild.o || oldChild) === child.o || // The code generated by the react compiler is memoized under this condition.
+              oldChild.tag[DOM_MEMO]?.(pP, oldChild.props))) {
+                oldChild.s = true;
+              }
             }
             child = oldChild;
           }
@@ -51258,22 +51328,41 @@ var build = (context, node, topLevelErrorHandlerNode, children) => {
             child.n = ns;
           }
         }
-        if (!isNodeString(child)) {
-          build(context, child, topLevelErrorHandlerNode);
+        if (!isNodeString(child) && !child.s) {
+          build(context, child);
+          delete child.f;
         }
         vChildren.push(child);
+        if (prevNode && !prevNode.s && !child.s) {
+          for (let p = prevNode; p && !isNodeString(p); p = p.vC?.at(-1)) {
+            p.nN = child;
+          }
+        }
+        prevNode = child;
       }
-    });
+    }
+    node.vR = buildWithPreviousChildren ? [...node.vC, ...oldVChildren || []] : oldVChildren || [];
     node.vC = vChildren;
-    node.vR.push(...oldVChildren);
+    if (buildWithPreviousChildren) {
+      delete node.pC;
+    }
   } catch (e) {
+    node.f = true;
+    if (e === cancelBuild) {
+      if (foundErrorHandler) {
+        return;
+      } else {
+        throw e;
+      }
+    }
+    const [errorHandlerContext, errorHandler, errorHandlerNode] = node[DOM_STASH]?.[3] || [];
     if (errorHandler) {
-      const fallbackUpdateFn = () => update([0, false, context[2]], topLevelErrorHandlerNode);
-      const fallbackUpdateFnArray = fallbackUpdateFnArrayMap.get(topLevelErrorHandlerNode) || [];
+      const fallbackUpdateFn = () => update([0, false, context[2]], errorHandlerNode);
+      const fallbackUpdateFnArray = fallbackUpdateFnArrayMap.get(errorHandlerNode) || [];
       fallbackUpdateFnArray.push(fallbackUpdateFn);
-      fallbackUpdateFnArrayMap.set(topLevelErrorHandlerNode, fallbackUpdateFnArray);
+      fallbackUpdateFnArrayMap.set(errorHandlerNode, fallbackUpdateFnArray);
       const fallback = errorHandler(e, () => {
-        const fnArray = fallbackUpdateFnArrayMap.get(topLevelErrorHandlerNode);
+        const fnArray = fallbackUpdateFnArrayMap.get(errorHandlerNode);
         if (fnArray) {
           const i = fnArray.indexOf(fallbackUpdateFn);
           if (i !== -1) {
@@ -51286,12 +51375,20 @@ var build = (context, node, topLevelErrorHandlerNode, children) => {
         if (context[0] === 1) {
           context[1] = true;
         } else {
-          build(context, node, topLevelErrorHandlerNode, [fallback]);
+          build(context, errorHandlerNode, [fallback]);
+          if ((errorHandler.length === 1 || context !== errorHandlerContext) && errorHandlerNode.c) {
+            apply(errorHandlerNode, errorHandlerNode.c, false);
+            return;
+          }
         }
-        return;
+        throw cancelBuild;
       }
     }
     throw e;
+  } finally {
+    if (foundErrorHandler) {
+      context[5].pop();
+    }
   }
 };
 var buildNode = (node) => {
@@ -51301,11 +51398,16 @@ var buildNode = (node) => {
     return { t: node.toString(), d: true };
   } else {
     if ("vR" in node) {
-      node = newJSXNode({
+      node = {
         tag: node.tag,
         props: node.props,
-        key: node.key
-      });
+        key: node.key,
+        f: node.f,
+        type: node.tag,
+        ref: node.props.ref,
+        o: node.o || node
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      };
     }
     if (typeof node.tag === "function") {
       ;
@@ -51316,7 +51418,7 @@ var buildNode = (node) => {
         nameSpaceContext ||= createContext("");
         node.props.children = [
           {
-            tag: nameSpaceContext.Provider,
+            tag: nameSpaceContext,
             props: {
               value: node.n = `http://www.w3.org/${ns}`,
               children: node.props.children
@@ -51338,17 +51440,26 @@ var updateSync = (context, node) => {
   node[DOM_STASH][2]?.forEach(([c, v]) => {
     c.values.push(v);
   });
-  build(context, node, void 0);
+  try {
+    build(context, node, void 0);
+  } catch {
+    return;
+  }
+  if (node.a) {
+    delete node.a;
+    return;
+  }
   node[DOM_STASH][2]?.forEach(([c]) => {
     c.values.pop();
   });
   if (context[0] !== 1 || !context[1]) {
-    apply(node, node.c);
+    apply(node, node.c, false);
   }
 };
 var updateMap = /* @__PURE__ */ new WeakMap();
 var currentUpdateSets = [];
 var update = async (context, node) => {
+  context[5] ||= [];
   const existing = updateMap.get(node);
   if (existing) {
     existing[0](void 0);
@@ -51383,34 +51494,38 @@ var update = async (context, node) => {
 };
 var renderNode = (node, container) => {
   const context = [];
+  context[5] = [];
   context[4] = true;
   build(context, node, void 0);
   context[4] = false;
   const fragment = document.createDocumentFragment();
-  apply(node, fragment);
+  apply(node, fragment, true);
   replaceContainer(node, fragment, container);
   container.replaceChildren(fragment);
 };
 var render = (jsxNode, container) => {
   renderNode(buildNode({ tag: "", props: { children: jsxNode } }), container);
 };
+var createPortal = (children, container, key) => ({
+  tag: HONO_PORTAL_ELEMENT,
+  props: {
+    children
+  },
+  key,
+  e: container,
+  p: 1
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+});
 
-// ../../.cache/deno/deno_esbuild/registry.npmjs.org/hono@4.4.7/node_modules/hono/dist/jsx/hooks/index.js
+// https://jsr.io/@hono/hono/4.6.13/src/jsx/hooks/index.ts
 var STASH_SATE = 0;
 var STASH_EFFECT = 1;
 var STASH_CALLBACK = 2;
-var STASH_MEMO = 4;
+var STASH_MEMO = 3;
+var resolvedPromiseValueMap = /* @__PURE__ */ new WeakMap();
 var isDepsChanged = (prevDeps, deps) => !prevDeps || !deps || prevDeps.length !== deps.length || deps.some((dep, i) => dep !== prevDeps[i]);
 var updateHook = void 0;
 var pendingStack = [];
-var setShadow = (node) => {
-  if (node.vC) {
-    node.s = node.vC;
-    node.vC = void 0;
-  }
-  ;
-  node.s?.forEach(setShadow);
-};
 var useState = (initialState) => {
   const resolveInitialState = () => typeof initialState === "function" ? initialState() : initialState;
   const buildData = buildDataStack.at(-1);
@@ -51432,9 +51547,12 @@ var useState = (initialState) => {
       if (!Object.is(newState, stateData[0])) {
         stateData[0] = newState;
         if (pendingStack.length) {
-          const pendingType = pendingStack.at(-1);
-          update([pendingType, false, localUpdateHook], node).then((node2) => {
-            if (!node2 || pendingType !== 2) {
+          const [pendingType, pendingPromise] = pendingStack.at(-1);
+          Promise.all([
+            pendingType === 3 ? node : update([pendingType, false, localUpdateHook], node),
+            pendingPromise
+          ]).then(([node2]) => {
+            if (!node2 || !(pendingType === 2 || pendingType === 3)) {
               return;
             }
             const lastVC = node2.vC;
@@ -51443,19 +51561,10 @@ var useState = (initialState) => {
                 if (lastVC !== node2.vC) {
                   return;
                 }
-                const shadowNode = Object.assign({}, node2);
-                shadowNode.vC = void 0;
-                build([], shadowNode, void 0);
-                setShadow(shadowNode);
-                node2.s = shadowNode.s;
-                update([0, false, localUpdateHook], node2);
+                update([pendingType === 3 ? 1 : 0, false, localUpdateHook], node2);
               });
             };
-            if (localUpdateHook) {
-              requestAnimationFrame(addUpdateTask);
-            } else {
-              addUpdateTask();
-            }
+            requestAnimationFrame(addUpdateTask);
           });
         } else {
           update([0, false, localUpdateHook], node);
@@ -51503,6 +51612,20 @@ var useCallback = (callback, deps) => {
   }
   return callback;
 };
+var use = (promise) => {
+  const cachedRes = resolvedPromiseValueMap.get(promise);
+  if (cachedRes) {
+    if (cachedRes.length === 2) {
+      throw cachedRes[1];
+    }
+    return cachedRes[0];
+  }
+  promise.then(
+    (res) => resolvedPromiseValueMap.set(promise, [res]),
+    (e) => resolvedPromiseValueMap.set(promise, [void 0, e])
+  );
+  throw promise;
+};
 var useMemo = (factory, deps) => {
   const buildData = buildDataStack.at(-1);
   if (!buildData) {
@@ -51518,7 +51641,371 @@ var useMemo = (factory, deps) => {
   return memoArray[hookIndex][0];
 };
 
-// ../../.cache/deno/deno_esbuild/registry.npmjs.org/hono@4.4.7/node_modules/hono/dist/jsx/dom/index.js
+// https://jsr.io/@hono/hono/4.6.13/src/jsx/dom/intrinsic-element/components.ts
+var components_exports2 = {};
+__export(components_exports2, {
+  button: () => button,
+  clearCache: () => clearCache,
+  composeRef: () => composeRef,
+  form: () => form,
+  input: () => input,
+  link: () => link,
+  meta: () => meta,
+  script: () => script,
+  style: () => style,
+  title: () => title
+});
+
+// https://jsr.io/@hono/hono/4.6.13/src/jsx/dom/hooks/index.ts
+var FormContext = createContext({
+  pending: false,
+  data: null,
+  method: null,
+  action: null
+});
+var actions = /* @__PURE__ */ new Set();
+var registerAction = (action) => {
+  actions.add(action);
+  action.finally(() => actions.delete(action));
+};
+
+// https://jsr.io/@hono/hono/4.6.13/src/jsx/dom/intrinsic-element/components.ts
+var clearCache = () => {
+  blockingPromiseMap = /* @__PURE__ */ Object.create(null);
+  createdElements = /* @__PURE__ */ Object.create(null);
+};
+var composeRef = (ref, cb) => {
+  return useMemo(
+    () => (e) => {
+      let refCleanup;
+      if (ref) {
+        if (typeof ref === "function") {
+          refCleanup = ref(e) || (() => {
+            ref(null);
+          });
+        } else if (ref && "current" in ref) {
+          ref.current = e;
+          refCleanup = () => {
+            ref.current = null;
+          };
+        }
+      }
+      const cbCleanup = cb(e);
+      return () => {
+        cbCleanup?.();
+        refCleanup?.();
+      };
+    },
+    [ref]
+  );
+};
+var blockingPromiseMap = /* @__PURE__ */ Object.create(null);
+var createdElements = /* @__PURE__ */ Object.create(null);
+var documentMetadataTag = (tag2, props, preserveNodeType, supportSort, supportBlocking) => {
+  if (props?.itemProp) {
+    return {
+      tag: tag2,
+      props,
+      type: tag2,
+      ref: props.ref
+    };
+  }
+  const head = document.head;
+  let { onLoad, onError, precedence, blocking, ...restProps } = props;
+  let element = null;
+  let created = false;
+  const deDupeKeys = deDupeKeyMap[tag2];
+  let existingElements = void 0;
+  if (deDupeKeys.length > 0) {
+    const tags = head.querySelectorAll(tag2);
+    LOOP: for (const e of tags) {
+      for (const key of deDupeKeyMap[tag2]) {
+        if (e.getAttribute(key) === props[key]) {
+          element = e;
+          break LOOP;
+        }
+      }
+    }
+    if (!element) {
+      const cacheKey = deDupeKeys.reduce(
+        (acc, key) => props[key] === void 0 ? acc : `${acc}-${key}-${props[key]}`,
+        tag2
+      );
+      created = !createdElements[cacheKey];
+      element = createdElements[cacheKey] ||= (() => {
+        const e = document.createElement(tag2);
+        for (const key of deDupeKeys) {
+          if (props[key] !== void 0) {
+            e.setAttribute(key, props[key]);
+          }
+          if (props.rel) {
+            e.setAttribute("rel", props.rel);
+          }
+        }
+        return e;
+      })();
+    }
+  } else {
+    existingElements = head.querySelectorAll(tag2);
+  }
+  precedence = supportSort ? precedence ?? "" : void 0;
+  if (supportSort) {
+    restProps[dataPrecedenceAttr] = precedence;
+  }
+  const insert = useCallback(
+    (e) => {
+      if (deDupeKeys.length > 0) {
+        let found = false;
+        for (const existingElement of head.querySelectorAll(tag2)) {
+          if (found && existingElement.getAttribute(dataPrecedenceAttr) !== precedence) {
+            head.insertBefore(e, existingElement);
+            return;
+          }
+          if (existingElement.getAttribute(dataPrecedenceAttr) === precedence) {
+            found = true;
+          }
+        }
+        head.appendChild(e);
+      } else if (existingElements) {
+        let found = false;
+        for (const existingElement of existingElements) {
+          if (existingElement === e) {
+            found = true;
+            break;
+          }
+        }
+        if (!found) {
+          head.insertBefore(
+            e,
+            head.contains(existingElements[0]) ? existingElements[0] : head.querySelector(tag2)
+          );
+        }
+        existingElements = void 0;
+      }
+    },
+    [precedence]
+  );
+  const ref = composeRef(props.ref, (e) => {
+    const key = deDupeKeys[0];
+    if (preserveNodeType === 2) {
+      e.innerHTML = "";
+    }
+    if (created || existingElements) {
+      insert(e);
+    }
+    if (!onError && !onLoad) {
+      return;
+    }
+    let promise = blockingPromiseMap[e.getAttribute(key)] ||= new Promise(
+      (resolve, reject) => {
+        e.addEventListener("load", resolve);
+        e.addEventListener("error", reject);
+      }
+    );
+    if (onLoad) {
+      promise = promise.then(onLoad);
+    }
+    if (onError) {
+      promise = promise.catch(onError);
+    }
+    promise.catch(() => {
+    });
+  });
+  if (supportBlocking && blocking === "render") {
+    const key = deDupeKeyMap[tag2][0];
+    if (props[key]) {
+      const value = props[key];
+      const promise = blockingPromiseMap[value] ||= new Promise((resolve, reject) => {
+        insert(element);
+        element.addEventListener("load", resolve);
+        element.addEventListener("error", reject);
+      });
+      use(promise);
+    }
+  }
+  const jsxNode = {
+    tag: tag2,
+    type: tag2,
+    props: {
+      ...restProps,
+      ref
+    },
+    ref
+  };
+  jsxNode.p = preserveNodeType;
+  if (element) {
+    jsxNode.e = element;
+  }
+  return createPortal(
+    jsxNode,
+    head
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  );
+};
+var title = (props) => {
+  const nameSpaceContext2 = getNameSpaceContext2();
+  const ns = nameSpaceContext2 && useContext(nameSpaceContext2);
+  if (ns?.endsWith("svg")) {
+    return {
+      tag: "title",
+      props,
+      type: "title",
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      ref: props.ref
+    };
+  }
+  return documentMetadataTag("title", props, void 0, false, false);
+};
+var script = (props) => {
+  if (!props || ["src", "async"].some((k) => !props[k])) {
+    return {
+      tag: "script",
+      props,
+      type: "script",
+      ref: props.ref
+    };
+  }
+  return documentMetadataTag("script", props, 1, false, true);
+};
+var style = (props) => {
+  if (!props || !["href", "precedence"].every((k) => k in props)) {
+    return {
+      tag: "style",
+      props,
+      type: "style",
+      ref: props.ref
+    };
+  }
+  props["data-href"] = props.href;
+  delete props.href;
+  return documentMetadataTag("style", props, 2, true, true);
+};
+var link = (props) => {
+  if (!props || ["onLoad", "onError"].some((k) => k in props) || props.rel === "stylesheet" && (!("precedence" in props) || "disabled" in props)) {
+    return {
+      tag: "link",
+      props,
+      type: "link",
+      ref: props.ref
+    };
+  }
+  return documentMetadataTag("link", props, 1, "precedence" in props, true);
+};
+var meta = (props) => {
+  return documentMetadataTag("meta", props, void 0, false, false);
+};
+var customEventFormAction = Symbol();
+var form = (props) => {
+  const { action, ...restProps } = props;
+  if (typeof action !== "function") {
+    ;
+    restProps.action = action;
+  }
+  const [state, setState] = useState([null, false]);
+  const onSubmit = useCallback(
+    async (ev) => {
+      const currentAction = ev.isTrusted ? action : ev.detail[customEventFormAction];
+      if (typeof currentAction !== "function") {
+        return;
+      }
+      ev.preventDefault();
+      const formData = new FormData(ev.target);
+      setState([formData, true]);
+      const actionRes = currentAction(formData);
+      if (actionRes instanceof Promise) {
+        registerAction(actionRes);
+        await actionRes;
+      }
+      setState([null, true]);
+    },
+    []
+  );
+  const ref = composeRef(props.ref, (el) => {
+    el.addEventListener("submit", onSubmit);
+    return () => {
+      el.removeEventListener("submit", onSubmit);
+    };
+  });
+  const [data, isDirty] = state;
+  state[1] = false;
+  return {
+    tag: FormContext,
+    props: {
+      value: {
+        pending: data !== null,
+        data,
+        method: data ? "post" : null,
+        action: data ? action : null
+      },
+      children: {
+        tag: "form",
+        props: {
+          ...restProps,
+          ref
+        },
+        type: "form",
+        ref
+      }
+    },
+    f: isDirty
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  };
+};
+var formActionableElement = (tag2, {
+  formAction,
+  ...props
+}) => {
+  if (typeof formAction === "function") {
+    const onClick = useCallback((ev) => {
+      ev.preventDefault();
+      ev.currentTarget.form.dispatchEvent(
+        new CustomEvent("submit", { detail: { [customEventFormAction]: formAction } })
+      );
+    }, []);
+    props.ref = composeRef(props.ref, (el) => {
+      el.addEventListener("click", onClick);
+      return () => {
+        el.removeEventListener("click", onClick);
+      };
+    });
+  }
+  return {
+    tag: tag2,
+    props,
+    type: tag2,
+    ref: props.ref
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  };
+};
+var input = (props) => formActionableElement("input", props);
+var button = (props) => formActionableElement("button", props);
+Object.assign(domRenderers, {
+  title,
+  script,
+  style,
+  link,
+  meta,
+  form,
+  input,
+  button
+});
+
+// https://jsr.io/@hono/hono/4.6.13/src/jsx/dom/jsx-dev-runtime.ts
+var jsxDEV = (tag2, props, key) => {
+  if (typeof tag2 === "string" && components_exports2[tag2]) {
+    tag2 = components_exports2[tag2];
+  }
+  return {
+    tag: tag2,
+    type: tag2,
+    props,
+    key,
+    ref: props.ref
+  };
+};
+var Fragment = (props) => jsxDEV("", props, void 0);
+
+// https://jsr.io/@hono/hono/4.6.13/src/jsx/dom/index.ts
 var createElement = (tag2, props, ...children) => {
   const jsxProps = props ? { ...props } : {};
   if (children.length) {
@@ -51690,7 +52177,7 @@ var autolink = edit(/^<(scheme:[^\s\x00-\x1f<>]*|email)>/).replace("scheme", /[a
 var _inlineComment = edit(_comment).replace("(?:-->|$)", "-->").getRegex();
 var tag = edit("^comment|^</[a-zA-Z][\\w:-]*\\s*>|^<[a-zA-Z][\\w-]*(?:attribute)*?\\s*/?>|^<\\?[\\s\\S]*?\\?>|^<![a-zA-Z]+\\s[\\s\\S]*?>|^<!\\[CDATA\\[[\\s\\S]*?\\]\\]>").replace("comment", _inlineComment).replace("attribute", /\s+[a-zA-Z:_][\w.:-]*(?:\s*=\s*"[^"]*"|\s*=\s*'[^']*'|\s*=\s*[^\s"'=<>`]+)?/).getRegex();
 var _inlineLabel = /(?:\[(?:\\.|[^\[\]\\])*\]|\\.|`[^`]*`|[^\[\]\\`])*?/;
-var link = edit(/^!?\[(label)\]\(\s*(href)(?:\s+(title))?\s*\)/).replace("label", _inlineLabel).replace("href", /<(?:\\.|[^\n<>\\])+>|[^\s\x00-\x1f]*/).replace("title", /"(?:\\"?|[^"\\])*"|'(?:\\'?|[^'\\])*'|\((?:\\\)?|[^)\\])*\)/).getRegex();
+var link2 = edit(/^!?\[(label)\]\(\s*(href)(?:\s+(title))?\s*\)/).replace("label", _inlineLabel).replace("href", /<(?:\\.|[^\n<>\\])+>|[^\s\x00-\x1f]*/).replace("title", /"(?:\\"?|[^"\\])*"|'(?:\\'?|[^'\\])*'|\((?:\\\)?|[^)\\])*\)/).getRegex();
 var reflink = edit(/^!?\[(label)\]\[(ref)\]/).replace("label", _inlineLabel).replace("ref", _blockLabel).getRegex();
 var nolink = edit(/^!?\[(ref)\](?:\[\])?/).replace("ref", _blockLabel).getRegex();
 var reflinkSearch = edit("reflink|nolink(?!\\()", "g").replace("reflink", reflink).replace("nolink", nolink).getRegex();
@@ -51707,7 +52194,7 @@ var inlineNormal = {
   emStrongRDelimAst,
   emStrongRDelimUnd,
   escape: escape$1,
-  link,
+  link: link2,
   nolink,
   punctuation,
   reflink,
@@ -51842,9 +52329,9 @@ function findClosingBracket(str, b) {
   }
   return -1;
 }
-function outputLink(cap, link2, raw2, lexer2, rules) {
-  const href = link2.href;
-  const title = link2.title || null;
+function outputLink(cap, link3, raw2, lexer2, rules) {
+  const href = link3.href;
+  const title2 = link3.title || null;
   const text = cap[1].replace(rules.other.outputLinkReplace, "$1");
   if (cap[0].charAt(0) !== "!") {
     lexer2.state.inLink = true;
@@ -51852,7 +52339,7 @@ function outputLink(cap, link2, raw2, lexer2, rules) {
       type: "link",
       raw: raw2,
       href,
-      title,
+      title: title2,
       text,
       tokens: lexer2.inlineTokens(text)
     };
@@ -51863,7 +52350,7 @@ function outputLink(cap, link2, raw2, lexer2, rules) {
     type: "image",
     raw: raw2,
     href,
-    title,
+    title: title2,
     text
   };
 }
@@ -52201,13 +52688,13 @@ ${currentText}` : currentText;
     if (cap) {
       const tag2 = cap[1].toLowerCase().replace(this.rules.other.multipleSpaceGlobal, " ");
       const href = cap[2] ? cap[2].replace(this.rules.other.hrefBrackets, "$1").replace(this.rules.inline.anyPunctuation, "$1") : "";
-      const title = cap[3] ? cap[3].substring(1, cap[3].length - 1).replace(this.rules.inline.anyPunctuation, "$1") : cap[3];
+      const title2 = cap[3] ? cap[3].substring(1, cap[3].length - 1).replace(this.rules.inline.anyPunctuation, "$1") : cap[3];
       return {
         type: "def",
         tag: tag2,
         raw: cap[0],
         href,
-        title
+        title: title2
       };
     }
   }
@@ -52354,15 +52841,15 @@ ${currentText}` : currentText;
         }
       }
       let href = cap[2];
-      let title = "";
+      let title2 = "";
       if (this.options.pedantic) {
-        const link2 = this.rules.other.pedanticHrefTitle.exec(href);
-        if (link2) {
-          href = link2[1];
-          title = link2[3];
+        const link3 = this.rules.other.pedanticHrefTitle.exec(href);
+        if (link3) {
+          href = link3[1];
+          title2 = link3[3];
         }
       } else {
-        title = cap[3] ? cap[3].slice(1, -1) : "";
+        title2 = cap[3] ? cap[3].slice(1, -1) : "";
       }
       href = href.trim();
       if (this.rules.other.startAngleBracket.test(href)) {
@@ -52374,7 +52861,7 @@ ${currentText}` : currentText;
       }
       return outputLink(cap, {
         href: href ? href.replace(this.rules.inline.anyPunctuation, "$1") : href,
-        title: title ? title.replace(this.rules.inline.anyPunctuation, "$1") : title
+        title: title2 ? title2.replace(this.rules.inline.anyPunctuation, "$1") : title2
       }, cap[0], this.lexer, this.rules);
     }
   }
@@ -52382,8 +52869,8 @@ ${currentText}` : currentText;
     let cap;
     if ((cap = this.rules.inline.reflink.exec(src)) || (cap = this.rules.inline.nolink.exec(src))) {
       const linkString = (cap[2] || cap[1]).replace(this.rules.other.multipleSpaceGlobal, " ");
-      const link2 = links[linkString.toLowerCase()];
-      if (!link2) {
+      const link3 = links[linkString.toLowerCase()];
+      if (!link3) {
         const text = cap[0].charAt(0);
         return {
           type: "text",
@@ -52391,7 +52878,7 @@ ${currentText}` : currentText;
           text
         };
       }
-      return outputLink(cap, link2, cap[0], this.lexer, this.rules);
+      return outputLink(cap, link3, cap[0], this.lexer, this.rules);
     }
   }
   emStrong(src, maskedSrc, prevChar = "") {
@@ -53051,7 +53538,7 @@ ${text}</tr>
   del({ tokens }) {
     return `<del>${this.parser.parseInline(tokens)}</del>`;
   }
-  link({ href, title, tokens }) {
+  link({ href, title: title2, tokens }) {
     const text = this.parser.parseInline(tokens);
     const cleanHref = cleanUrl(href);
     if (cleanHref === null) {
@@ -53059,21 +53546,21 @@ ${text}</tr>
     }
     href = cleanHref;
     let out = '<a href="' + href + '"';
-    if (title) {
-      out += ' title="' + escape(title) + '"';
+    if (title2) {
+      out += ' title="' + escape(title2) + '"';
     }
     out += ">" + text + "</a>";
     return out;
   }
-  image({ href, title, text }) {
+  image({ href, title: title2, text }) {
     const cleanHref = cleanUrl(href);
     if (cleanHref === null) {
       return escape(text);
     }
     href = cleanHref;
     let out = `<img src="${href}" alt="${text}"`;
-    if (title) {
-      out += ` title="${escape(title)}"`;
+    if (title2) {
+      out += ` title="${escape(title2)}"`;
     }
     out += ">";
     return out;
@@ -53754,9 +54241,7 @@ var marked2 = new Marked(
 function useMdToHtml(markdownString) {
   const [htmlString, setHtmlString] = useState("");
   useEffect(() => {
-    marked2.parse(markdownString, { async: true }).then((html2) => {
-      setHtmlString(html2);
-    });
+    marked2.parse(markdownString, { async: true }).then((html2) => setHtmlString(html2));
   }, [markdownString]);
   return htmlString;
 }
@@ -53796,17 +54281,31 @@ function Html({ content }) {
 function Chat() {
   const [question, setQuestion] = useState("");
   const [answer, setAnswer] = useState("");
+  const [isInprogress, setInProgress] = useState(false);
+  const [ac, setAc] = useState(null);
   const html2 = useMdToHtml(answer);
   const sendQuestion = useCallback(async () => {
+    setInProgress(true);
     setAnswer("");
-    const res = await fetch(`/chat?q=${encodeURIComponent(question)}`, {
-      method: "POST"
-    });
-    const decoder = new TextDecoder();
-    for await (const chunk of res.body) {
-      setAnswer(
-        (current) => current += decoder.decode(chunk, { stream: true })
-      );
+    const url = `/chat?q=${encodeURIComponent(question)}`;
+    setQuestion("");
+    const ac2 = new AbortController();
+    setAc(ac2);
+    try {
+      const res = await fetch(url, {
+        method: "POST",
+        signal: ac2.signal
+      });
+      const decoder = new TextDecoder();
+      for await (const chunk of res.body) {
+        setAnswer(
+          (current) => current += decoder.decode(chunk, { stream: true })
+        );
+      }
+    } catch (err) {
+      if (err.name !== "AbortError") throw err;
+    } finally {
+      setInProgress(false);
     }
   }, [question]);
   return /* @__PURE__ */ jsxDEV(Fragment, { children: [
@@ -53814,10 +54313,12 @@ function Chat() {
     /* @__PURE__ */ jsxDEV(
       "form",
       {
-        onSubmit: (e) => {
+        onSubmit: isInprogress ? (e) => {
+          e.preventDefault();
+          ac.abort();
+        } : (e) => {
           e.preventDefault();
           sendQuestion();
-          setQuestion("");
         },
         class: "flex",
         children: [
@@ -53835,8 +54336,8 @@ function Chat() {
             "button",
             {
               type: "submit",
-              class: "border border-slate-900 bg-cyan-600 text-slate-100 rounded py-2 px-6 hover:bg-cyan-700 focus:outline-none ml-1 font-bold",
-              children: "Send"
+              class: `border border-slate-900  text-slate-100 rounded py-2 px-6 focus:outline-none ml-1 font-bold ${isInprogress ? "bg-rose-600 hover:bg-rose-700" : "bg-cyan-600 hover:bg-cyan-700"}`,
+              children: isInprogress ? "Cancel" : "Send"
             }
           )
         ]

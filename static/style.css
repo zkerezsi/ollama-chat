@@ -637,6 +637,11 @@ video {
   background-color: rgb(8 145 178 / var(--tw-bg-opacity, 1));
 }
 
+.bg-rose-600 {
+  --tw-bg-opacity: 1;
+  background-color: rgb(225 29 72 / var(--tw-bg-opacity, 1));
+}
+
 .bg-slate-400 {
   --tw-bg-opacity: 1;
   background-color: rgb(148 163 184 / var(--tw-bg-opacity, 1));
@@ -733,12 +738,11 @@ html {
 }
 
 .answer code {
-  /*overflow-x: scroll;*/
   font-family: Iosevka Web, Consolas, Courier, monospace;
 }
 
 .answer pre {
-  font-size: smaller;
+  overflow-x: scroll;
   border-radius: 3px;
   margin: 0.5em 0;
   color: #c9d1d9;
@@ -763,6 +767,11 @@ html {
 .hover\:bg-cyan-700:hover {
   --tw-bg-opacity: 1;
   background-color: rgb(14 116 144 / var(--tw-bg-opacity, 1));
+}
+
+.hover\:bg-rose-700:hover {
+  --tw-bg-opacity: 1;
+  background-color: rgb(190 18 60 / var(--tw-bg-opacity, 1));
 }
 
 .focus\:outline-none:focus {

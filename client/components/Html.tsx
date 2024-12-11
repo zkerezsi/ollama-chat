@@ -1,4 +1,9 @@
-import { useMemo, JSXNode, createElement, Fragment } from "npm:hono/jsx/dom";
+import {
+  useMemo,
+  JSXNode,
+  createElement,
+  Fragment,
+} from "jsr:@hono/hono/jsx/dom";
 
 function nodeToJSXNode(node: Node): JSXNode {
   if (node.nodeType !== Node.ELEMENT_NODE) {

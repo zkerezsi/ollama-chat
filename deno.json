@@ -1,12 +1,13 @@
 {
   "compilerOptions": {
     "jsx": "precompile",
-    "jsxImportSource": "npm:hono/jsx",
+    "jsxImportSource": "jsr:@hono/hono/jsx",
     "lib": ["dom", "dom.iterable", "dom.asynciterable", "deno.ns"]
   },
   "tasks": {
     "build-css": "deno run --allow-all npm:tailwindcss -i client/style.css -o static/style.css",
     "build-js": "deno run --allow-all build.ts",
-    "run": "deno task build-css && deno task build-js && deno run --allow-all main.tsx"
+    "run": "deno task build-css && deno task build-js && deno run --allow-all main.tsx",
+    "deploy": "sh -c \"rsync -av --exclude='.git' . arm:~/workspace/ollama-chat/\""
   }
 }
